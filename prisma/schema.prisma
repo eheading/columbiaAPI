@@ -1,0 +1,333 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["dataProxy"]
+}
+
+model client {
+  id                    Int                  @unique(map: "CustomerID_UNIQUE")
+  name_of_company       String?              @db.VarChar(45)
+  chinese_surname       String?              @db.VarChar(45)
+  chinese_given_name    String?              @db.VarChar(45)
+  english_surname       String               @db.VarChar(45)
+  english_given_name    String               @db.VarChar(45)
+  gender                String?              @db.Char(1)
+  prefix                String?              @db.VarChar(2)
+  phone1                Int
+  phone2                Int?
+  email                 String               @db.VarChar(45)
+  status                String?              @db.VarChar(45)
+  updated_at            String?              @db.VarChar(45)
+  survey_appointment_id Int
+  survey_appointment    survey_appointment[]
+  survey_report         survey_report[]
+
+  @@id([id, survey_appointment_id])
+}
+
+model cost_management {
+  quotation_id     Int
+  item_description String?   @db.VarChar(45)
+  cost             String?   @db.VarChar(45)
+  remark           String?   @db.VarChar(45)
+  updated_time     String?   @db.VarChar(45)
+  quotation_id1    Int
+  quotation        quotation @relation(fields: [quotation_id1], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cost_management_quotation1")
+
+  @@id([quotation_id, quotation_id1])
+  @@index([quotation_id1], map: "fk_cost_management_quotation1_idx")
+}
+
+model invoice {
+  invoice_id                 Int
+  contact_person             String?              @db.VarChar(45)
+  invoice_date               String?              @db.VarChar(45)
+  to_be_paid                 String?              @db.VarChar(45)
+  description                String?              @db.VarChar(45)
+  job_number                 String?              @db.VarChar(45)
+  quotation_id               String?              @db.VarChar(45)
+  goods_belong_to            String?              @db.VarChar(45)
+  service_date               String?              @db.VarChar(45)
+  total_price                String?              @db.VarChar(45)
+  deposit_amount             String?              @db.VarChar(45)
+  deposit_number             String?              @db.VarChar(45)
+  from_address               String?              @db.VarChar(45)
+  to_address                 String?              @db.VarChar(45)
+  sales                      String?              @db.VarChar(45)
+  remark                     String?              @db.VarChar(45)
+  lost                       String?              @db.VarChar(45)
+  invoice_payment_invoice_id Int
+  invoice_price_invoice_id   Int
+  invoice_payment            invoice_payment      @relation(fields: [invoice_payment_invoice_id], references: [invoice_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_invoice_payment1")
+  invoice_price              invoice_price        @relation(fields: [invoice_price_invoice_id], references: [invoice_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoice_invoice_price1")
+  order_to_contactor         order_to_contactor[]
+  order_to_operation         order_to_operation[]
+
+  @@id([invoice_id, invoice_payment_invoice_id, invoice_price_invoice_id])
+  @@index([invoice_payment_invoice_id], map: "fk_invoice_invoice_payment1_idx")
+  @@index([invoice_price_invoice_id], map: "fk_invoice_invoice_price1_idx")
+}
+
+model invoice_payment {
+  invoice_id            Int       @id
+  payment_status        String?   @db.VarChar(45)
+  bank_of_issue         String?   @db.VarChar(45)
+  cheque_number         String?   @db.VarChar(45)
+  payment_received_by   String?   @db.VarChar(45)
+  payment_received_date String?   @db.VarChar(45)
+  amount_received       String?   @db.VarChar(45)
+  receipt_numver        String?   @db.VarChar(45)
+  receipt_posted_date   String?   @db.VarChar(45)
+  remarks               String?   @db.VarChar(45)
+  variable_cost         String?   @db.VarChar(45)
+  invoice               invoice[]
+}
+
+model invoice_price {
+  invoice_id                Int       @id
+  basic_move_service_charge String?   @db.VarChar(45)
+  special_handle            String?   @db.VarChar(45)
+  additional_charge         String?   @db.VarChar(45)
+  misc_service              String?   @db.VarChar(45)
+  insurance                 String?   @db.VarChar(45)
+  discount                  String?   @db.VarChar(45)
+  total                     String?   @db.VarChar(45)
+  invoice                   invoice[]
+}
+
+model item_category {
+  item_category_id Int       @id
+  item_catagory    String?   @db.VarChar(45)
+  item_id          item_id[]
+}
+
+model item_id {
+  item_id                              Int
+  item_category_id                     Int
+  item_category                        String?        @db.VarChar(45)
+  item_name                            String?        @db.VarChar(45)
+  quantity                             String?        @db.VarChar(45)
+  photo                                Bytes?         @db.Blob
+  item_move_list_quotation_number      Int
+  item_move_list_quotation_id          Int
+  item_category_item_categoryToitem_id item_category  @relation(fields: [item_category_id], references: [item_category_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_item_id_item_category1")
+  item_move_list                       item_move_list @relation(fields: [item_move_list_quotation_number, item_move_list_quotation_id], references: [quotation_number, quotation_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_item_id_item_move_list1")
+
+  @@id([item_id, item_category_id, item_move_list_quotation_number, item_move_list_quotation_id])
+  @@index([item_category_id], map: "fk_item_id_item_category1_idx")
+  @@index([item_move_list_quotation_number, item_move_list_quotation_id], map: "fk_item_id_item_move_list1_idx")
+}
+
+model item_move_list {
+  quotation_number Int
+  job_number       String?   @db.VarChar(45)
+  invoice_number   String?   @db.VarChar(45)
+  quotation_id     Int
+  quotation        quotation @relation(fields: [quotation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_item_move_list_quotation1")
+  item_id          item_id[]
+
+  @@id([quotation_number, quotation_id])
+  @@index([quotation_id], map: "fk_item_move_list_quotation1_idx")
+}
+
+model order_to_contactor {
+  id                                 Int     @id
+  job_id                             String? @db.VarChar(45)
+  contractor                         String? @db.VarChar(45)
+  order_date                         String? @db.VarChar(45)
+  svc_code                           String? @db.VarChar(45)
+  job_description                    String? @db.VarChar(45)
+  service_date                       String? @db.VarChar(45)
+  service_address                    String? @db.VarChar(45)
+  item_amount                        String? @db.VarChar(45)
+  remark                             String? @db.VarChar(45)
+  price                              String? @db.VarChar(45)
+  status                             String? @db.VarChar(45)
+  invoice_invoice_id                 Int
+  invoice_invoice_payment_invoice_id Int
+  invoice_invoice_price_invoice_id   Int
+  invoice                            invoice @relation(fields: [invoice_invoice_id, invoice_invoice_payment_invoice_id, invoice_invoice_price_invoice_id], references: [invoice_id, invoice_payment_invoice_id, invoice_price_invoice_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_to_contactor_invoice1")
+
+  @@index([invoice_invoice_id, invoice_invoice_payment_invoice_id, invoice_invoice_price_invoice_id], map: "fk_order_to_contactor_invoice1_idx")
+}
+
+model order_to_operation {
+  order_to_operation_id              Int
+  contact_person                     String?         @db.VarChar(45)
+  date_of_order                      String?         @db.VarChar(45)
+  date_of_excecution                 String?         @db.VarChar(45)
+  material_supply                    String?         @db.VarChar(45)
+  time_slot                          String?         @db.VarChar(45)
+  report_from_ops_report_id          Int
+  invoice_invoice_id                 Int
+  invoice_invoice_payment_invoice_id Int
+  invoice_invoice_price_invoice_id   Int
+  invoice                            invoice         @relation(fields: [invoice_invoice_id, invoice_invoice_payment_invoice_id, invoice_invoice_price_invoice_id], references: [invoice_id, invoice_payment_invoice_id, invoice_price_invoice_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_to_operation_invoice1")
+  report_from_ops                    report_from_ops @relation(fields: [report_from_ops_report_id], references: [report_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_to_operation_report_from_ops1")
+
+  @@id([order_to_operation_id, report_from_ops_report_id])
+  @@index([invoice_invoice_id, invoice_invoice_payment_invoice_id, invoice_invoice_price_invoice_id], map: "fk_order_to_operation_invoice1_idx")
+  @@index([report_from_ops_report_id], map: "fk_order_to_operation_report_from_ops1_idx")
+}
+
+model quotation {
+  id                            Int                        @id @unique(map: "ID_UNIQUE")
+  basic_item_volume             Int                        @unique(map: "CustomerID_UNIQUE")
+  optional_item_volume          String                     @db.VarChar(45)
+  from_address                  String                     @db.VarChar(45)
+  to_address                    String?                    @db.VarChar(45)
+  item_detail                   String?                    @db.VarChar(45)
+  number_of_day_for_packing     String?                    @db.VarChar(45)
+  total_price                   Int
+  complete_pack_and_move_charge Int
+  additional_price              Int?
+  documentation_fee             Int?
+  packing_date                  Int?
+  arrive_date                   Int?
+  traffic                       String?                    @db.VarChar(30)
+  sales                         String?                    @db.VarChar(45)
+  remark                        String?                    @db.VarChar(45)
+  status                        String                     @db.VarChar(45)
+  created_at                    String?                    @db.VarChar(45)
+  updated_at                    String                     @db.VarChar(45)
+  cost_management               cost_management[]
+  item_move_list                item_move_list[]
+  quotation_expense_detail      quotation_expense_detail[]
+}
+
+model quotation_expense_detail {
+  quotation_id      Int
+  long_term_worker  String?   @db.VarChar(45)
+  truck             String?   @db.VarChar(45)
+  contract_out      String?   @db.VarChar(45)
+  casual_worker     String?   @db.VarChar(45)
+  travelling_paking String?   @db.VarChar(45)
+  quotation_id1     Int
+  quotation         quotation @relation(fields: [quotation_id1], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_quotation_expense_detail_quotation1")
+
+  @@id([quotation_id, quotation_id1])
+  @@index([quotation_id1], map: "fk_quotation_expense_detail_quotation1_idx")
+}
+
+model report_from_ops {
+  report_id                   Int                  @id
+  job_id                      String?              @db.VarChar(45)
+  order_id                    String?              @db.VarChar(45)
+  service_date                String?              @db.VarChar(45)
+  number_of_days              String?              @db.VarChar(45)
+  number_of_load              String?              @db.VarChar(45)
+  number_of_pkgs              String?              @db.VarChar(45)
+  dimension_of_lvan_and_cases String?              @db.VarChar(45)
+  created_at                  String?              @db.VarChar(45)
+  material_suppilies          String?              @db.VarChar(45)
+  order_to_operation          order_to_operation[]
+}
+
+model supplier {
+  supplier_id    Int     @id
+  supplier_name  String? @db.VarChar(45)
+  contact_person String? @db.VarChar(45)
+  contact_phone  String? @db.VarChar(45)
+  contact_email  String? @db.VarChar(45)
+}
+
+model survey_appointment {
+  id                           Int
+  survey_date                  String?       @db.VarChar(45)
+  client_id                    String?       @db.VarChar(45)
+  client_addess                String?       @db.VarChar(45)
+  client_phone                 String?       @db.VarChar(45)
+  status                       String?       @db.VarChar(45)
+  client_id1                   Int
+  client_survey_appointment_id Int
+  survey_report_suveryId       Int
+  survey_report_client_id      Int
+  client                       client        @relation(fields: [client_id1, client_survey_appointment_id], references: [id, survey_appointment_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_appointment_client1")
+  survey_report                survey_report @relation(fields: [survey_report_suveryId, survey_report_client_id], references: [suveryId, client_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_appointment_survey_report1")
+
+  @@id([id, client_id1, client_survey_appointment_id, survey_report_suveryId, survey_report_client_id])
+  @@index([client_id1, client_survey_appointment_id], map: "fk_survey_appointment_client1_idx")
+  @@index([survey_report_suveryId, survey_report_client_id], map: "fk_survey_appointment_survey_report1_idx")
+}
+
+model survey_report {
+  suveryId           Int
+  client_id          Int
+  qis_number         Int?
+  svc_code           String?              @db.VarChar(45)
+  survey_date        String?              @db.VarChar(45)
+  survey_by          String?              @db.VarChar(45)
+  kr_number          String?              @db.VarChar(45)
+  client_name        String?              @db.VarChar(45)
+  survey_address     String?              @db.VarChar(45)
+  client_phone       String?              @db.VarChar(45)
+  client_office_tel  String?              @db.VarChar(45)
+  acct_affil         String?              @db.VarChar(45)
+  refered_by         String?              @db.VarChar(45)
+  leave_date         String?              @db.VarChar(45)
+  shpt_arvl_date     String?              @db.VarChar(45)
+  act_pkg_date       String?              @db.VarChar(45)
+  ctn_dely_date      String?              @db.VarChar(45)
+  quoted_volume      String?              @db.VarChar(45)
+  how_client_know_us String?              @db.VarChar(45)
+  status             String?              @db.VarChar(45)
+  remark             String?              @db.VarChar(45)
+  client             client               @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_report_client1")
+  survey_appointment survey_appointment[]
+  survey_report_item survey_report_item[]
+
+  @@id([suveryId, client_id])
+  @@index([client_id], map: "fk_survey_report_client1_idx")
+}
+
+model survey_report_item {
+  id                      Int
+  survey_report_suveryId  Int
+  survey_report_client_id String        @db.VarChar(45)
+  item_amount             Int?
+  survey_report           survey_report @relation(fields: [survey_report_suveryId], references: [suveryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_survey_report_item_survey_report1")
+
+  @@id([id, survey_report_suveryId, survey_report_client_id])
+  @@index([survey_report_suveryId, survey_report_client_id], map: "fk_survey_report_item_survey_report1_idx")
+}
+
+model tasks {
+  task_id     Int       @id @default(autoincrement())
+  title       String    @db.VarChar(255)
+  start_date  DateTime? @db.Date
+  due_date    DateTime? @db.Date
+  status      Int       @db.TinyInt
+  priority    Int       @db.TinyInt
+  description String?   @db.Text
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model testtable {
+  idtesttable Int    @id @default(autoincrement()) @db.UnsignedInt
+  name        String @db.VarChar(45)
+  othername   String @db.VarChar(45)
+}
+
+model user {
+  id         Int     @id @unique(map: "id_UNIQUE") @default(autoincrement())
+  username   String  @unique(map: "username_UNIQUE") @db.VarChar(45)
+  password   String  @db.VarChar(64)
+  email      String? @unique(map: "email_UNIQUE") @db.VarChar(45)
+  status     String? @db.VarChar(45)
+  role       String? @db.VarChar(45)
+  created_at String? @db.VarChar(45)
+  updated_at String? @db.VarChar(45)
+}
+
+model user_staff_management {
+  user_id    Int     @id
+  user_name  String? @db.VarChar(45)
+  name       String? @db.VarChar(45)
+  role       String? @db.VarChar(45)
+  status     String? @db.VarChar(45)
+  updated_at String? @db.VarChar(45)
+}
